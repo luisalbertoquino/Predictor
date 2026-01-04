@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(cat:*)",
+      "Bash(tee:*)",
+      "Bash(timeout 5 tail:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(iconv:*)",
+      "Bash(findstr:*)",
+      "Bash(netstat:*)",
+      "Bash(timeout 3 curl:*)",
+      "Bash(timeout 300 python:*)",
+      "Bash(curl:*)",
+      "Bash(pip freeze:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
