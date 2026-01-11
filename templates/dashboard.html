@@ -103,18 +103,47 @@
                 padding: 15px;
             }
 
+            /* Asegurar que LUNA aparezca después de SOL en móvil */
+            .countdown-sol {
+                order: 1;
+            }
+
+            .countdown-luna {
+                order: 2;
+            }
+
             #countdown-sol, #countdown-luna {
-                font-size: 2em !important;
+                font-size: 2.5em !important;
             }
 
             #fecha-sol, #fecha-luna {
-                font-size: 0.75em !important;
+                font-size: 0.8em !important;
+            }
+
+            h1 {
+                font-size: 1.8em !important;
+            }
+
+            .subtitle {
+                font-size: 0.95em !important;
             }
         }
 
         @media (max-width: 480px) {
             #countdown-sol, #countdown-luna {
+                font-size: 2em !important;
+            }
+
+            #fecha-sol, #fecha-luna {
+                font-size: 0.7em !important;
+            }
+
+            h1 {
                 font-size: 1.5em !important;
+            }
+
+            header {
+                padding: 20px !important;
             }
         }
 
@@ -1347,43 +1376,15 @@
                 prediccionesAgrupadas[key].predicciones.push(pred);
             });
 
-            // Filtrar y ordenar todas las predicciones (pendientes + futuras)
-            const ahora = new Date();
-            const ahoraStr = ahora.toISOString().split('T')[0];
-            const horaActual = ahora.getHours();
-
-            // Primero separar en pendientes de hoy y futuras
-            const pendientesHoy = [];
-            const prediccionesFuturas = [];
-
-            Object.values(prediccionesAgrupadas).forEach(grupo => {
-                const fechaSorteoStr = grupo.fecha_sorteo;
-
-                if (fechaSorteoStr === ahoraStr) {
-                    // Es hoy - verificar si aún no ha jugado
-                    // SOL juega a las 13:00, mostrar hasta las 14:00
-                    // LUNA juega a las 21:00, mostrar hasta las 22:00
-                    if ((grupo.turno === 'SOL' && horaActual < 14) || (grupo.turno === 'LUNA' && horaActual < 22)) {
-                        pendientesHoy.push(grupo);
-                    }
-                } else if (fechaSorteoStr > ahoraStr) {
-                    // Es futuro
-                    prediccionesFuturas.push(grupo);
+            // Ordenar todas las predicciones por fecha y turno (mostrar todas las disponibles)
+            const gruposOrdenados = Object.values(prediccionesAgrupadas).sort((a, b) => {
+                // Primero ordenar por fecha
+                if (a.fecha_sorteo !== b.fecha_sorteo) {
+                    return a.fecha_sorteo.localeCompare(b.fecha_sorteo);
                 }
-            });
-
-            // Ordenar y combinar: primero las de hoy, luego las futuras
-            const gruposOrdenados = [
-                ...pendientesHoy.sort((a, b) => a.turno === 'SOL' ? -1 : 1),
-                ...prediccionesFuturas.sort((a, b) => {
-                    const fechaA = new Date(a.fecha_sorteo);
-                    const fechaB = new Date(b.fecha_sorteo);
-                    if (fechaA.getTime() === fechaB.getTime()) {
-                        return a.turno === 'SOL' ? -1 : 1;
-                    }
-                    return fechaA - fechaB;
-                })
-            ].slice(0, 4); // Mostrar hasta 4 predicciones (2 días completos)
+                // Si es la misma fecha, SOL primero
+                return a.turno === 'SOL' ? -1 : 1;
+            }).slice(0, 4); // Mostrar hasta 4 predicciones (2 días completos)
 
             // Si no hay predicciones pendientes, mostrar mensaje
             if (gruposOrdenados.length === 0) {
