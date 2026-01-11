@@ -1031,18 +1031,14 @@
             let proximoLUNA = new Date(ahora);
             let horaLuna, minutoLuna;
 
-            if (diaSemana === 0) {
-                // Domingo o festivo: 8:30 PM
-                horaLuna = 20;
-                minutoLuna = 30;
-            } else if (diaSemana === 6) {
-                // Sábado: 10:42 PM
+            if (diaSemana === 0 || diaSemana === 6) {
+                // Sábado o Domingo: 10:42 PM
                 horaLuna = 22;
                 minutoLuna = 42;
             } else {
-                // Lunes a Viernes: 10:50 PM
+                // Lunes a Viernes: 10:40 PM
                 horaLuna = 22;
-                minutoLuna = 50;
+                minutoLuna = 40;
             }
 
             proximoLUNA.setHours(horaLuna, minutoLuna, 0, 0);
@@ -1051,12 +1047,10 @@
             if (hora > horaLuna || (hora === horaLuna && minuto >= minutoLuna)) {
                 proximoLUNA.setDate(proximoLUNA.getDate() + 1);
                 const nuevoDia = proximoLUNA.getDay();
-                if (nuevoDia === 0) {
-                    proximoLUNA.setHours(20, 30, 0, 0);
-                } else if (nuevoDia === 6) {
+                if (nuevoDia === 0 || nuevoDia === 6) {
                     proximoLUNA.setHours(22, 42, 0, 0);
                 } else {
-                    proximoLUNA.setHours(22, 50, 0, 0);
+                    proximoLUNA.setHours(22, 40, 0, 0);
                 }
             }
 

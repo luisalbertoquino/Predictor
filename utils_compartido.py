@@ -217,9 +217,9 @@ def calcular_proximo_sorteo_luna():
     """
     Calcula la fecha del próximo sorteo LUNA
     LUNA juega todos los días:
-    - Lunes a Viernes: 10:50 PM (22:50)
+    - Lunes a Viernes: 10:40 PM (22:40)
     - Sábado: 10:42 PM (22:42)
-    - Domingo/Festivo: 8:30 PM (20:30)
+    - Domingo: 10:42 PM (22:42)
 
     Returns:
         str: Fecha del próximo sorteo LUNA en formato YYYY-MM-DD
@@ -231,15 +231,12 @@ def calcular_proximo_sorteo_luna():
     minuto_actual = ahora.minute
 
     # Determinar hora de corte según el día
-    if dia_semana == 6 or es_festivo(ahora):  # Domingo o festivo
-        hora_corte = 20
-        minuto_corte = 30
-    elif dia_semana == 5:  # Sábado
+    if dia_semana == 6 or dia_semana == 5:  # Sábado o Domingo
         hora_corte = 22
         minuto_corte = 42
     else:  # Lunes a viernes
         hora_corte = 22
-        minuto_corte = 50
+        minuto_corte = 40
 
     # Si ya pasó la hora del sorteo de hoy, ir a mañana
     if hora_actual > hora_corte or (hora_actual == hora_corte and minuto_actual >= minuto_corte):
