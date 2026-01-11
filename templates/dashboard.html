@@ -817,7 +817,16 @@
                                 statusEl.textContent = '⚙️ Ejecutando...';
                                 statusEl.className = 'status status-running';
                             } else {
-                                statusEl.textContent = data.ultimo ? `✅ Último: ${data.ultimo}` : 'Inactivo';
+                                if (data.ultimo) {
+                                    // Si viene de cron, mostrar con ícono diferente
+                                    if (data.ultimo.startsWith('Cron:')) {
+                                        statusEl.textContent = `🤖 ${data.ultimo.replace('Cron: ', '')}`;
+                                    } else {
+                                        statusEl.textContent = `✅ ${data.ultimo}`;
+                                    }
+                                } else {
+                                    statusEl.textContent = '⏸️ Sin ejecutar hoy';
+                                }
                                 statusEl.className = 'status status-idle';
                             }
                         }

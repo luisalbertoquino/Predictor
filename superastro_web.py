@@ -98,13 +98,62 @@ def ejecutar_script(script):
 
     return jsonify({'mensaje': f'Script {script} iniciado'})
 
+def obtener_ultima_ejecucion_cron():
+    """
+    Lee el cron.log para obtener la última ejecución exitosa
+    Retorna fecha/hora de última ejecución o None
+    """
+    try:
+        cron_log = 'logs/cron.log'
+        if not os.path.exists(cron_log):
+            return None
+
+        with open(cron_log, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        # Buscar última línea que indica completado
+        for line in reversed(lines):
+            if 'Todos los predictores' in line and 'completados' in line:
+                # Extraer fecha del formato: "... completados - Sun Jan 11 02:40:50 -05 2026"
+                import re
+                match = re.search(r'completados - \w+ (\w+)\s+(\d+)\s+(\d+):(\d+):(\d+).+(\d{4})', line)
+                if match:
+                    mes_en = match.group(1)
+                    dia = match.group(2)
+                    hora = match.group(3)
+                    minuto = match.group(4)
+                    año = match.group(6)
+
+                    # Traducir mes
+                    meses = {
+                        'Jan': 'Ene', 'Feb': 'Feb', 'Mar': 'Mar', 'Apr': 'Abr',
+                        'May': 'May', 'Jun': 'Jun', 'Jul': 'Jul', 'Aug': 'Ago',
+                        'Sep': 'Sep', 'Oct': 'Oct', 'Nov': 'Nov', 'Dec': 'Dic'
+                    }
+                    mes = meses.get(mes_en, mes_en)
+
+                    return f"{dia} {mes} {año} - {hora}:{minuto}"
+
+        return None
+    except Exception as e:
+        print(f"Error leyendo cron.log: {e}")
+        return None
+
 @app.route('/api/estado/<script>')
 def obtener_estado(script):
     """Obtiene el estado de ejecución de un script"""
     if script not in estado_ejecuciones:
         return jsonify({'error': 'Script no encontrado'}), 404
 
-    return jsonify(estado_ejecuciones[script])
+    estado = estado_ejecuciones[script].copy()
+
+    # Si no está ejecutando y no tiene timestamp propio, usar el del cron
+    if not estado['ejecutando'] and not estado['ultimo']:
+        ultima_cron = obtener_ultima_ejecucion_cron()
+        if ultima_cron:
+            estado['ultimo'] = f"Cron: {ultima_cron}"
+
+    return jsonify(estado)
 
 @app.route('/api/historial')
 def obtener_historial():
