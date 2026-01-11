@@ -1568,7 +1568,24 @@
             const tabsContainer = document.getElementById('evaluaciones-tabs');
 
             if (evaluadas.length === 0) {
-                container.innerHTML = '<p style="color:#999;">No hay evaluaciones disponibles</p>';
+                container.innerHTML = `
+                    <div style="padding: 60px 40px; text-align: center; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px;">
+                        <div style="font-size: 4em; margin-bottom: 20px;">✅</div>
+                        <h3 style="color: #051E5C; margin-bottom: 15px; font-size: 1.5em;">Evaluaciones pendientes</h3>
+                        <p style="color: #666; font-size: 1.1em; margin-bottom: 25px; line-height: 1.6;">
+                            Las evaluaciones aparecerán aquí después de que se jueguen los sorteos y se comparen con las predicciones.
+                        </p>
+                        <div style="max-width: 500px; margin: 0 auto; padding: 20px; background: white; border-radius: 10px; border-left: 4px solid #00a8e8;">
+                            <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
+                            <p style="margin: 0; color: #051E5C; font-size: 0.95em; line-height: 1.5;">
+                                <strong>Proceso automático:</strong><br>
+                                1. Las predicciones se generan a las 2 AM<br>
+                                2. Después de cada sorteo, se evalúan automáticamente<br>
+                                3. Los resultados aparecen aquí con estadísticas de aciertos
+                            </p>
+                        </div>
+                    </div>
+                `;
                 tabsContainer.innerHTML = '';
                 return;
             }
@@ -1697,7 +1714,22 @@
             const tabsContainer = document.getElementById('ranking-tabs');
 
             if (evaluadas.length === 0) {
-                container.innerHTML = '<p style="color:#999;">No hay datos suficientes para calcular ranking</p>';
+                container.innerHTML = `
+                    <div style="padding: 60px 40px; text-align: center; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px;">
+                        <div style="font-size: 4em; margin-bottom: 20px;">📊</div>
+                        <h3 style="color: #051E5C; margin-bottom: 15px; font-size: 1.5em;">Ranking en construcción</h3>
+                        <p style="color: #666; font-size: 1.1em; margin-bottom: 25px; line-height: 1.6;">
+                            Los rankings se generarán automáticamente cuando los sorteos se jueguen y se evalúen los resultados.
+                        </p>
+                        <div style="max-width: 500px; margin: 0 auto; padding: 20px; background: white; border-radius: 10px; border-left: 4px solid #0066cc;">
+                            <div style="font-size: 2em; margin-bottom: 10px;">💡</div>
+                            <p style="margin: 0; color: #051E5C; font-size: 0.95em; line-height: 1.5;">
+                                <strong>¿Cómo funciona?</strong><br>
+                                Las predicciones se generan cada día a las 2 AM. Después de cada sorteo, el sistema evalúa automáticamente los aciertos y actualiza los rankings.
+                            </p>
+                        </div>
+                    </div>
+                `;
                 tabsContainer.innerHTML = '';
                 return;
             }
@@ -1870,7 +1902,25 @@
             const tabsContainer = document.getElementById('analisis-tabs');
 
             if (evaluadas.length === 0) {
-                container.innerHTML = '<p style="color:#999;">No hay datos para análisis detallado</p>';
+                container.innerHTML = `
+                    <div style="padding: 60px 40px; text-align: center; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px;">
+                        <div style="font-size: 4em; margin-bottom: 20px;">🔬</div>
+                        <h3 style="color: #051E5C; margin-bottom: 15px; font-size: 1.5em;">Análisis detallado próximamente</h3>
+                        <p style="color: #666; font-size: 1.1em; margin-bottom: 25px; line-height: 1.6;">
+                            Los análisis comparativos de algoritmos se generarán cuando haya evaluaciones de sorteos reales.
+                        </p>
+                        <div style="max-width: 500px; margin: 0 auto; padding: 20px; background: white; border-radius: 10px; border-left: 4px solid #7209b7;">
+                            <div style="font-size: 2em; margin-bottom: 10px;">📈</div>
+                            <p style="margin: 0; color: #051E5C; font-size: 0.95em; line-height: 1.5;">
+                                <strong>Análisis incluye:</strong><br>
+                                • Comparación de precisión por dígito<br>
+                                • Tasa de aciertos de signos zodiacales<br>
+                                • Evolución temporal del rendimiento<br>
+                                • Recomendaciones de mejores algoritmos
+                            </p>
+                        </div>
+                    </div>
+                `;
                 tabsContainer.innerHTML = '';
                 return;
             }
