@@ -1892,9 +1892,16 @@
                 tab.classList.remove('active');
             });
 
-            // Activar la pestaña seleccionada
-            document.getElementById(`${seccion}-tab-${index}`).classList.add('active');
-            document.querySelectorAll(`#${seccion}-tabs .tab`)[index].classList.add('active');
+            // Activar la pestaña seleccionada (con validación)
+            const tabContent = document.getElementById(`${seccion}-tab-${index}`);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+
+            const tabButtons = document.querySelectorAll(`#${seccion}-tabs .tab`);
+            if (tabButtons[index]) {
+                tabButtons[index].classList.add('active');
+            }
         }
 
         function mostrarAnalisisAlgoritmos(evaluadas) {
