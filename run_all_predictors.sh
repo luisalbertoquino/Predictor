@@ -48,8 +48,13 @@ python superastro_lstm_predictor.py >> "$LOG_FILE" 2>&1
 echo "✓ LSTM completado" | tee -a "$LOG_FILE"
 
 echo "" | tee -a "$LOG_FILE"
+echo "[6/6] Evaluando predicciones con resultados reales..." | tee -a "$LOG_FILE"
+python evaluar_predicciones.py >> "$LOG_FILE" 2>&1
+echo "✓ Evaluación completada" | tee -a "$LOG_FILE"
+
+echo "" | tee -a "$LOG_FILE"
 echo "========================================" | tee -a "$LOG_FILE"
-echo "Todos los predictores completados - $(date)" | tee -a "$LOG_FILE"
+echo "Todos los predictores y evaluaciones completados - $(date)" | tee -a "$LOG_FILE"
 echo "Log guardado en: $LOG_FILE" | tee -a "$LOG_FILE"
 echo "========================================" | tee -a "$LOG_FILE"
 
