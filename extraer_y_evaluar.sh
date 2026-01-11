@@ -26,10 +26,10 @@ echo "" | tee -a "$LOG_FILE"
 echo "⏳ Esperando 5 minutos para que publiquen resultado..." | tee -a "$LOG_FILE"
 sleep 300
 
-# Extraer resultados de la página
+# Extraer resultados de la página (solo hoy/ayer)
 echo "" | tee -a "$LOG_FILE"
-echo "[1/2] Extrayendo resultados de SuperAstro..." | tee -a "$LOG_FILE"
-python superastro_ml_extractor.py >> "$LOG_FILE" 2>&1
+echo "[1/2] Extrayendo resultados recientes de SuperAstro..." | tee -a "$LOG_FILE"
+python extraer_hoy.py >> "$LOG_FILE" 2>&1
 echo "✓ Extracción completada" | tee -a "$LOG_FILE"
 
 # Evaluar predicciones con los nuevos resultados
