@@ -1392,11 +1392,11 @@
                 prediccionesAgrupadas[key].predicciones.push(pred);
             });
 
-            // Ordenar todas las predicciones por fecha y turno (mostrar todas las disponibles)
+            // Ordenar todas las predicciones por fecha y turno (mostrar las más RECIENTES primero)
             const gruposOrdenados = Object.values(prediccionesAgrupadas).sort((a, b) => {
-                // Primero ordenar por fecha
+                // Primero ordenar por fecha (más reciente primero)
                 if (a.fecha_sorteo !== b.fecha_sorteo) {
-                    return a.fecha_sorteo.localeCompare(b.fecha_sorteo);
+                    return b.fecha_sorteo.localeCompare(a.fecha_sorteo);
                 }
                 // Si es la misma fecha, SOL primero
                 return a.turno === 'SOL' ? -1 : 1;
