@@ -70,17 +70,12 @@ class SuperAstroLSTMPredictor:
         print("📂 CARGANDO DATOS PARA LSTM")
         print(f"{'='*70}\n")
 
-        # Usar archivo compartido
-        if not os.path.exists(ARCHIVO_EXCEL):
-            print("❌ No se encontró archivo de datos")
-            print("💡 Ejecuta primero: python superastro_ml_predictor.py")
-            return False
-
-        archivo_reciente = ARCHIVO_EXCEL
-        print(f"📄 Archivo: {archivo_reciente}")
-
         try:
-            self.df = pd.read_excel(archivo_reciente, sheet_name='Datos_Raw')
+            from db import cargar_datos_raw
+            self.df = cargar_datos_raw()
+            if self.df.empty:
+                print("❌ No se encontraron datos en la base de datos")
+                return False
             print(f"✅ Datos cargados: {len(self.df)} registros")
             print(f"📅 Rango: {self.df['Fecha'].min()} a {self.df['Fecha'].max()}\n")
             return True

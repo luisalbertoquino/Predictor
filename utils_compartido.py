@@ -10,9 +10,11 @@ import json
 import os
 from datetime import datetime, timedelta
 
-# Archivos compartidos - TODOS los scripts usan estos
+# Archivo de historial de predicciones (JSON)
 ARCHIVO_JSON = 'predicciones_historial.json'
-ARCHIVO_EXCEL = 'superastro_ml_data.xlsx'  # Sin fecha, siempre el mismo
+
+# Re-exportar funciones de BD para que los scripts existentes solo importen utils_compartido
+from db import cargar_datos_raw, cargar_datos_ml, init_db
 
 def cargar_historial():
     """Carga el historial de predicciones del JSON único"""

@@ -67,23 +67,20 @@ class SuperAstroMejorado:
         self.scaler = StandardScaler()
 
     def cargar_datos(self):
-        """Carga los datos usando archivo compartido"""
-        if not os.path.exists(ARCHIVO_EXCEL):
-            print("❌ No se encontraron datos")
-            return False
-
-        archivo = ARCHIVO_EXCEL
-
+        """Carga los datos desde la base de datos MySQL."""
         print("\n" + "="*70)
         print("📂 CARGANDO Y LIMPIANDO DATOS")
         print("="*70 + "\n")
 
-        print(f"📄 Archivo: {archivo}")
-        self.df = pd.read_excel(archivo, sheet_name='Datos_Raw')
+        from db import cargar_datos_raw
+        self.df = cargar_datos_raw()
+
+        if self.df.empty:
+            print("❌ No se encontraron datos en la base de datos")
+            return False
 
         print(f"✅ Datos cargados: {len(self.df)} registros")
         print(f"📅 Rango: {self.df['Fecha'].min()} a {self.df['Fecha'].max()}\n")
-
         return True
 
     def analizar_autocorrelacion(self):

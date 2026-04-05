@@ -101,12 +101,11 @@ class SuperAstroTracker:
         self.historial = cargar_historial()
         print(f"   [OK] Prediccion guardada para {fecha_sorteo} - {turno_str}")
     
-    def actualizar_resultados_desde_datos(self, archivo_datos):
-        """
-        Actualiza resultados reales desde el archivo de datos Excel
-        """
+    def actualizar_resultados_desde_datos(self, archivo_datos=None):
+        """Actualiza resultados reales consultando la BD MySQL."""
         try:
-            df = pd.read_excel(archivo_datos, sheet_name='Datos_Raw')
+            from db import cargar_datos_raw
+            df = cargar_datos_raw()
             actualizados = 0
             
             for pred in self.historial["predicciones"]:
@@ -288,177 +287,51 @@ class SuperAstroMLPredictor:
     
     def verificar_actualizar_datos(self, forzar_actualizacion=False):
         """
-        Verifica si hay datos actualizados y los actualiza si es necesario
-        OPTIMIZADO: Solo descarga días faltantes
-        PRIMERA VEZ: Pregunta rango de fechas personalizado
+        Verifica que la BD MySQL tiene datos.
+        Si está vacía o se fuerza actualización, descarga desde 2025-01-01.
         """
         print(f"\n{'='*70}")
         print("🔍 VERIFICACIÓN DE DATOS")
         print(f"{'='*70}\n")
-        
-        # Buscar archivo compartido
-        archivos = [ARCHIVO_EXCEL] if os.path.exists(ARCHIVO_EXCEL) else []
-        
-        # ===== PRIMERA VEZ - NO HAY ARCHIVOS =====
-        if not archivos or forzar_actualizacion:
-            if forzar_actualizacion:
-                print("🔄 Actualización forzada solicitada\n")
-            else:
-                print("📭 Primera vez - No se encontraron datos previos\n")
-                print("="*70)
-                print("⚙️  CONFIGURACIÓN INICIAL")
-                print("="*70 + "\n")
-                
-                print("Para la primera descarga, puedes elegir:")
-                print("  1️⃣  Descarga RÁPIDA (últimos 3 meses) - RECOMENDADO PARA PRUEBA")
-                print("  2️⃣  Descarga COMPLETA (desde 2020)")
-                print("  3️⃣  Personalizada (tú eliges la fecha)\n")
-                
-                try:
-                    opcion = input("Selecciona opción (1/2/3) [1]: ").strip() or "1"
-                    
-                    if opcion == "1":
-                        # Últimos 3 meses
-                        fecha_inicio = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
-                        print(f"\n✅ Descarga rápida (últimos 3 meses) desde: {fecha_inicio}")
-                        dias_aprox = 90
-                    elif opcion == "2":
-                        # Desde 2020
-                        fecha_inicio = "2020-01-01"
-                        print(f"\n✅ Descarga completa desde: {fecha_inicio}")
-                        dias_aprox = (datetime.now() - datetime(2020, 1, 1)).days
-                    elif opcion == "3":
-                        # Personalizada
-                        fecha_input = input("\nFecha inicio (YYYY-MM-DD) [2024-01-01]: ").strip() or "2024-01-01"
-                        try:
-                            datetime.strptime(fecha_input, "%Y-%m-%d")
-                            fecha_inicio = fecha_input
-                            print(f"\n✅ Descarga personalizada desde: {fecha_inicio}")
-                            dias_aprox = (datetime.now() - datetime.strptime(fecha_inicio, "%Y-%m-%d")).days
-                        except:
-                            print("\n⚠️  Fecha inválida, usando últimos 3 meses")
-                            fecha_inicio = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
-                            dias_aprox = 90
-                    else:
-                        fecha_inicio = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
-                        print(f"\n✅ Opción no válida, usando últimos 3 meses: {fecha_inicio}")
-                        dias_aprox = 90
-                    
-                    tiempo_estimado = int((dias_aprox * 2 * 0.4) / 60)  # 2 turnos, 0.4 seg cada uno
-                    if tiempo_estimado < 1:
-                        tiempo_estimado_str = f"~{int(dias_aprox * 2 * 0.4)} segundos"
-                    else:
-                        tiempo_estimado_str = f"~{tiempo_estimado} minutos"
-                    
-                    print(f"\n⏱️  Tiempo estimado: {tiempo_estimado_str}")
-                    print(f"📊 Registros aproximados: ~{dias_aprox * 2}")
-                    print(f"\n{'='*70}\n")
-                    
-                except Exception as e:
-                    print(f"\n⚠️  Error en entrada: {e}")
-                    fecha_inicio = (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d")
-                    print(f"   Usando últimos 6 meses: {fecha_inicio}\n")
-            
-            # Actualizar datos desde la fecha elegida
-            if EXTRACTOR_DISPONIBLE:
-                try:
-                    self.archivo_datos = extraer_actualizar(
-                        fecha_inicio=fecha_inicio if not forzar_actualizacion else "2020-01-01",
-                        silencioso=False,
-                        archivo_existente=None
-                    )
-                    if self.archivo_datos:
-                        print(f"\n✅ Datos descargados exitosamente")
-                        return True
-                    else:
-                        print("\n❌ Error al descargar datos")
-                        return False
-                except Exception as e:
-                    print(f"\n❌ Error en la descarga: {e}")
-                    return False
-            else:
-                print("❌ Módulo extractor no disponible")
-                print("💡 Asegúrate de tener superastro_ml_extractor.py en el mismo directorio")
-                return False
-        
-        # ===== YA HAY DATOS - ACTUALIZACIÓN INCREMENTAL =====
-        else:
-            # Encontrar el más reciente
-            archivo_mas_reciente = max(archivos, key=os.path.getctime)
-            fecha_archivo = datetime.fromtimestamp(os.path.getctime(archivo_mas_reciente))
-            dias_antiguedad = (datetime.now() - fecha_archivo).days
-            
-            print(f"📁 Archivo encontrado: {archivo_mas_reciente}")
-            print(f"📅 Fecha del archivo: {fecha_archivo.strftime('%Y-%m-%d %H:%M:%S')}")
-            print(f"⏱️  Antigüedad: {dias_antiguedad} días\n")
-            
-            # Verificar última fecha en los datos
+
+        from db import total_registros, ultima_fecha as uf
+        n = total_registros()
+
+        if n > 0 and not forzar_actualizacion:
+            print(f"✅ BD lista: {n} registros hasta {uf()}")
+            return True
+
+        fecha_inicio = "2020-01-01" if forzar_actualizacion else "2025-01-01"
+        print(f"🔄 Descargando datos desde {fecha_inicio}...")
+
+        if EXTRACTOR_DISPONIBLE:
             try:
-                df_check = pd.read_excel(archivo_mas_reciente, sheet_name='Datos_Raw')
-                ultima_fecha_datos = df_check['Fecha'].max()
-                dias_desactualizados = (datetime.now() - pd.to_datetime(ultima_fecha_datos)).days
-                
-                print(f"📊 Última fecha en datos: {ultima_fecha_datos}")
-                print(f"⏳ Días sin actualizar: {dias_desactualizados}\n")
-                
-                if dias_desactualizados == 0:
-                    print("✅ Los datos están completamente actualizados (incluye hoy)")
-                    self.archivo_datos = archivo_mas_reciente
+                resultado = extraer_actualizar(fecha_inicio=fecha_inicio, silencioso=False)
+                if resultado:
+                    print(f"\n✅ Datos guardados en la BD")
                     return True
-                elif dias_desactualizados <= 3:
-                    print(f"🔄 Actualizando {dias_desactualizados} días faltantes...")
-                    print(f"⏱️  Tiempo estimado: ~{dias_desactualizados * 2 * 0.4:.0f} segundos\n")
                 else:
-                    print(f"⚠️  Datos desactualizados por {dias_desactualizados} días")
-                    tiempo_est = int((dias_desactualizados * 2 * 0.4) / 60)
-                    print(f"⏱️  Tiempo estimado: ~{tiempo_est} minutos")
-                    print("🔄 Actualizando...\n")
-                
+                    print("\n❌ Error al descargar datos")
+                    return False
             except Exception as e:
-                print(f"⚠️  No se pudo verificar última fecha: {e}")
-                print("🔄 Actualizando datos...\n")
-            
-            # Actualizar datos (solo descarga lo que falta)
-            if EXTRACTOR_DISPONIBLE:
-                try:
-                    self.archivo_datos = extraer_actualizar(
-                        fecha_inicio="2020-01-01", 
-                        silencioso=False,
-                        archivo_existente=archivo_mas_reciente
-                    )
-                    if self.archivo_datos:
-                        print(f"\n✅ Datos actualizados exitosamente")
-                        return True
-                    else:
-                        print("\n❌ Error al actualizar datos")
-                        return False
-                except Exception as e:
-                    print(f"\n❌ Error en la actualización: {e}")
-                    print(f"ℹ️  Usando archivo anterior: {archivo_mas_reciente}")
-                    self.archivo_datos = archivo_mas_reciente
-                    return True
-            else:
-                print("❌ Módulo extractor no disponible")
-                print("💡 Asegúrate de tener superastro_ml_extractor.py en el mismo directorio")
-                print(f"ℹ️  Usando archivo existente: {archivo_mas_reciente}")
-                self.archivo_datos = archivo_mas_reciente
-                return True
+                print(f"\n❌ Error en la descarga: {e}")
+                return False
+        else:
+            print("❌ Módulo extractor no disponible")
+            return False
     
     def cargar_datos(self):
-        """
-        Carga los datos desde el archivo Excel
-        """
+        """Carga datos con features ML desde la BD MySQL."""
         print(f"\n{'='*70}")
         print("📂 CARGANDO DATOS")
         print(f"{'='*70}\n")
-        
-        if not self.archivo_datos:
-            print("❌ No hay archivo de datos")
-            return False
-        
+
         try:
-            print(f"📄 Archivo: {self.archivo_datos}")
-            self.df = pd.read_excel(self.archivo_datos, sheet_name='Datos_ML_Entrenamiento')
+            from db import cargar_datos_ml
+            self.df = cargar_datos_ml()
+            if self.df.empty:
+                print("❌ No hay datos en la base de datos")
+                return False
             
             print(f"✅ Datos cargados: {len(self.df)} registros")
             print(f"📅 Rango: {self.df['Fecha'].min()} a {self.df['Fecha'].max()}")

@@ -16,7 +16,7 @@ if sys.platform == 'win32' and hasattr(sys.stdout, 'buffer'):
     except:
         pass
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Response
 import subprocess
 import json
 import os
@@ -222,6 +222,23 @@ def calcular_estadisticas(predicciones_evaluadas):
             }
 
     return stats
+
+@app.route('/api/exportar-csv')
+def exportar_csv():
+    """Descarga todos los resultados históricos como CSV."""
+    try:
+        from db import exportar_csv as _csv
+        contenido = _csv()
+        fecha_hoy = datetime.now().strftime('%Y-%m-%d')
+        return Response(
+            contenido,
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename=superastro_resultados_{fecha_hoy}.csv'
+            }
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/detener/<script>', methods=['POST'])
 def detener_script(script):

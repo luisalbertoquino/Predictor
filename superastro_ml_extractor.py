@@ -425,48 +425,33 @@ def extraer_actualizar(fecha_inicio="2020-01-01", silencioso=False, archivo_exis
         print(f"\n{'='*70}")
         print("📥 DESCARGANDO SOLO DÍAS FALTANTES")
         print(f"{'='*70}\n")
-    
-    datos_sol = extractor.extraer_rango_fechas("SOL", fecha_inicio, FECHA_FIN)
+
+    datos_sol  = extractor.extraer_rango_fechas("SOL",  fecha_inicio, FECHA_FIN)
     datos_luna = extractor.extraer_rango_fechas("LUNA", fecha_inicio, FECHA_FIN)
-    
-    # Combinar datos nuevos
+
     datos_nuevos = datos_sol + datos_luna
-    
+
     if not datos_nuevos and not datos_previos:
         print("❌ No se extrajeron datos. Verifica la conexión y la página.")
         return None
-    
-    # Combinar datos previos con nuevos
-    todos_los_datos = datos_previos + datos_nuevos
-    
+
     if not silencioso:
         print(f"\n{'='*70}")
-        print(f"🔄 Preparando datos para Machine Learning...")
+        print(f"💾 Guardando en base de datos...")
         print(f"{'='*70}\n")
-        
-        if datos_previos:
-            print(f"📊 Resumen de actualización:")
-            print(f"   • Registros previos: {len(datos_previos)}")
-            print(f"   • Registros nuevos: {len(datos_nuevos)}")
-            print(f"   • Total final: {len(todos_los_datos)}\n")
-    
-    # Crear DataFrame
-    df_raw = pd.DataFrame(todos_los_datos)
-    
-    # Eliminar duplicados por si acaso
-    df_raw = df_raw.drop_duplicates(subset=['Fecha', 'Turno'], keep='last')
-    
-    # Preparar para ML
-    df_ml = extractor.preparar_para_ml(df_raw)
-    
-    # Exportar
-    archivo = extractor.exportar_excel(todos_los_datos, df_ml)
-    
+
+    # Guardar en MySQL (solo los nuevos; ON DUPLICATE KEY ignora duplicados)
+    if datos_nuevos:
+        from db import insertar_resultados_lote
+        insertados = insertar_resultados_lote(datos_nuevos)
+        if not silencioso:
+            print(f"✅ {len(datos_nuevos)} registros enviados a la BD "
+                  f"({insertados} filas afectadas)")
+
     if not silencioso:
-        print("🎉 ¡PROCESO COMPLETADO EXITOSAMENTE!")
-        print(f"\n📁 Archivo generado: {archivo}")
-    
-    return archivo
+        print("\n🎉 ¡PROCESO COMPLETADO EXITOSAMENTE!")
+
+    return "mysql:superastro_db"
 
 
 def main():

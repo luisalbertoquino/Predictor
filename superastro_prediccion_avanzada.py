@@ -40,7 +40,8 @@ class SuperAstroPrediccionAvanzada:
         """
         Inicializa con datos históricos
         """
-        self.df = pd.read_excel(archivo_datos, sheet_name='Datos_Raw')
+        from db import cargar_datos_raw
+        self.df = cargar_datos_raw()
         print(f"\n✅ Datos cargados: {len(self.df)} registros")
         print(f"📅 Rango: {self.df['Fecha'].min()} a {self.df['Fecha'].max()}\n")
 
