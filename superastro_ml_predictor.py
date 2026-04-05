@@ -238,17 +238,17 @@ class SuperAstroTracker:
             print(f"📅 {pred['fecha_sorteo']} - {pred['turno']}")
             print(f"   Real: {pred['resultado_real']['numero']} - {pred['resultado_real']['signo']}")
             
-            if "aciertos" in pred:
-                mejor_modelo = max(pred["aciertos"].items(), 
+            if "aciertos" in pred and pred["aciertos"]:
+                mejor_modelo = max(pred["aciertos"].items(),
                                   key=lambda x: x[1]["digitos_correctos"])
-                
+
                 for key, nombre in modelos.items():
                     if key in pred["aciertos"]:
                         ac = pred["aciertos"][key]
                         pred_num = pred[key]["numero"]
                         digitos = ac["digitos_correctos"]
                         signo = "✓" if ac["signo_correcto"] else "✗"
-                        
+
                         destacado = " ⭐" if key == mejor_modelo[0] and digitos == mejor_modelo[1]["digitos_correctos"] else ""
                         print(f"      {nombre:15s}: {pred_num} ({digitos}/4) {signo}{destacado}")
             print()
