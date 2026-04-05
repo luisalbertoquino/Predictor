@@ -367,26 +367,49 @@ def extraer_actualizar(fecha_inicio="2020-01-01", silencioso=False, archivo_exis
     extractor = SuperAstroMLExtractor()
     FECHA_FIN = datetime.now().strftime("%Y-%m-%d")
 
-    # Determinar desde qué fecha descargar consultando la BD
+    # Determinar rango de fechas a descargar consultando la BD
     try:
-        from db import ultima_fecha as _ultima_fecha, total_registros
+        from db import ultima_fecha as _ultima_fecha, cargar_datos_raw, total_registros
         uf = _ultima_fecha()
         if uf:
-            ultima_dt = datetime.strptime(str(uf)[:10], "%Y-%m-%d")
-            dias_faltantes = (datetime.now() - ultima_dt).days
+            ultima_dt  = datetime.strptime(str(uf)[:10], "%Y-%m-%d")
+            inicio_dt  = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+            hoy_dt     = datetime.strptime(FECHA_FIN, "%Y-%m-%d")
+
+            # Obtener primera fecha en la BD
+            df_bd = cargar_datos_raw()
+            primera_dt = df_bd['Fecha'].min().to_pydatetime().replace(tzinfo=None) if not df_bd.empty else ultima_dt
+
+            if not silencioso:
+                print(f"📂 BD existente: {total_registros()} registros")
+                print(f"   Rango BD: {primera_dt.date()} → {ultima_dt.date()}")
+
+            # Descargar hacia atrás si fecha_inicio < primera fecha en BD
+            if inicio_dt < primera_dt:
+                fin_atras = (primera_dt - timedelta(days=1)).strftime("%Y-%m-%d")
+                if not silencioso:
+                    print(f"⬅️  Descargando histórico faltante: {fecha_inicio} → {fin_atras}")
+                datos_sol_atras  = extractor.extraer_rango_fechas("SOL",  fecha_inicio, fin_atras)
+                datos_luna_atras = extractor.extraer_rango_fechas("LUNA", fecha_inicio, fin_atras)
+                datos_atras = datos_sol_atras + datos_luna_atras
+                if datos_atras:
+                    from db import insertar_resultados_lote
+                    insertar_resultados_lote(datos_atras)
+                    if not silencioso:
+                        print(f"✅ {len(datos_atras)} registros históricos insertados")
+
+            # Descargar hacia adelante (días recientes faltantes)
+            dias_faltantes = (hoy_dt - ultima_dt).days
             if dias_faltantes <= 0:
                 if not silencioso:
-                    print(f"✅ BD ya actualizada hasta {uf} ({total_registros()} registros)")
+                    print(f"✅ BD ya actualizada hasta hoy")
                 return "mysql:superastro_db"
             fecha_inicio = (ultima_dt + timedelta(days=1)).strftime("%Y-%m-%d")
             if not silencioso:
-                print(f"📂 BD existente: {total_registros()} registros hasta {uf}")
-                print(f"🔄 Descargando {dias_faltantes} días faltantes ({fecha_inicio} a {FECHA_FIN})\n")
+                print(f"➡️  Descargando días recientes: {fecha_inicio} → {FECHA_FIN}")
         else:
             if not silencioso:
-                print(f"⚙️  BD vacía — descarga completa desde {fecha_inicio}")
-                print(f"   📅 Fecha fin: {FECHA_FIN}")
-                print(f"   🎯 Extrayendo ambos turnos: SOL y LUNA\n")
+                print(f"⚙️  BD vacía — descarga completa desde {fecha_inicio} hasta {FECHA_FIN}\n")
     except Exception as e:
         if not silencioso:
             print(f"⚠️  No se pudo consultar la BD: {e}")
