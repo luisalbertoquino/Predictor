@@ -556,11 +556,12 @@
             <h1 style="color: #092B76; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🎰 SuperAstro Dashboard</h1>
             <p class="subtitle" style="color: #092B76; opacity: 0.9;">Sistema Unificado de Predicción y Análisis ML</p>
             <div style="margin-top: 12px;">
-                <a href="/api/exportar-csv" download
+                <button onclick="descargarCSV()"
                    style="display:inline-block; padding:8px 20px; background:#051E5C; color:#F7E214;
-                          border-radius:8px; font-weight:bold; font-size:0.9em; text-decoration:none;">
+                          border-radius:8px; font-weight:bold; font-size:0.9em; text-decoration:none;
+                          border:none; cursor:pointer;">
                     ⬇ Descargar Resultados CSV
-                </a>
+                </button>
             </div>
 
             <!-- COUNTDOWN TIMERS -->
@@ -662,6 +663,23 @@
                     <div class="loading">
                         <div class="spinner"></div>
                         <p>Cargando análisis...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN: ÚLTIMOS RESULTADOS -->
+        <div class="section">
+            <h2>📋 Últimos Resultados</h2>
+            <div class="tabs-container">
+                <div class="tabs" id="resultados-tabs">
+                    <button class="tab active" onclick="cambiarTab('resultados', 0)">☀️ SOL</button>
+                    <button class="tab" onclick="cambiarTab('resultados', 1)">🌙 LUNA</button>
+                </div>
+                <div id="resultados-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Cargando resultados...</p>
                     </div>
                 </div>
             </div>
@@ -1574,7 +1592,8 @@
                 'ranking': 'ranking-container',
                 'analisis': 'analisis-algoritmos',
                 'estadisticas': 'stats-container',
-                'top3': 'top3-content'
+                'top3': 'top3-content',
+                'resultados': 'resultados-container'
             };
 
             const containerId = containerMap[seccion] || `${seccion}-container`;
@@ -1883,6 +1902,73 @@
 
             container.innerHTML = html || '<p style="color:#999;">No hay datos para análisis</p>';
         }
+
+        function descargarCSV() {
+            // Forzar HTTPS para evitar el error de contenido mixto
+            const base = window.location.origin.replace('http://', 'https://');
+            window.location.href = base + '/api/exportar-csv';
+        }
+
+        function cargarUltimosResultados() {
+            fetch('/api/ultimos-resultados')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) { console.error(data.error); return; }
+                    mostrarUltimosResultados(data);
+                })
+                .catch(e => console.error('Error cargando resultados:', e));
+        }
+
+        function mostrarUltimosResultados(data) {
+            const container = document.getElementById('resultados-container');
+            const turnos = [
+                { key: 'SOL',  label: '☀️ SOL',  color: '#e67e00' },
+                { key: 'LUNA', label: '🌙 LUNA', color: '#051E5C' }
+            ];
+
+            let html = '';
+            turnos.forEach((t, idx) => {
+                const filas = data[t.key] || [];
+                html += `<div class="tab-content ${idx === 0 ? 'active' : ''}" id="resultados-tab-${idx}">`;
+
+                if (filas.length === 0) {
+                    html += `<p style="color:#999; padding:30px; text-align:center;">No hay resultados de ${t.key} disponibles</p>`;
+                } else {
+                    html += `
+                        <table>
+                            <thead>
+                                <tr style="background:${t.color};">
+                                    <th style="color:white;">#</th>
+                                    <th style="color:white;">Fecha</th>
+                                    <th style="color:white;">Número</th>
+                                    <th style="color:white;">Signo</th>
+                                    <th style="color:white;">Sorteo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    filas.forEach((r, i) => {
+                        html += `
+                            <tr>
+                                <td style="color:#999; font-size:0.9em;">${i + 1}</td>
+                                <td><strong style="color:${t.color};">${r.fecha}</strong></td>
+                                <td style="font-size:1.3em; font-weight:bold; letter-spacing:2px;">${r.numero}</td>
+                                <td>${r.signo}</td>
+                                <td style="color:#999; font-size:0.9em;">${r.sorteo !== null ? r.sorteo : '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    html += `</tbody></table>`;
+                }
+
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Cargar últimos resultados al inicio
+        cargarUltimosResultados();
     </script>
 </body>
 </html>

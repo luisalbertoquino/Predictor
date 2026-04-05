@@ -240,6 +240,39 @@ def exportar_csv():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/ultimos-resultados')
+def ultimos_resultados():
+    """Retorna los últimos 10 resultados de SOL y LUNA desde la BD."""
+    try:
+        from db import get_connection
+        conn = get_connection()
+        resultados = {'SOL': [], 'LUNA': []}
+        try:
+            with conn.cursor() as cur:
+                for turno_nombre, turno_num in [('SOL', 0), ('LUNA', 1)]:
+                    cur.execute("""
+                        SELECT fecha, numero_completo, signo_nombre, sorteo
+                        FROM sorteo_resultados
+                        WHERE turno = %s
+                        ORDER BY fecha DESC
+                        LIMIT 10
+                    """, (turno_num,))
+                    rows = cur.fetchall()
+                    resultados[turno_nombre] = [
+                        {
+                            'fecha': str(r['fecha']),
+                            'numero': str(r['numero_completo']).zfill(4),
+                            'signo': r['signo_nombre'],
+                            'sorteo': r['sorteo']
+                        }
+                        for r in rows
+                    ]
+        finally:
+            conn.close()
+        return jsonify(resultados)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/detener/<script>', methods=['POST'])
 def detener_script(script):
     """Marca un script como detenido (nota: subprocess no se puede detener fácilmente)"""
