@@ -32,8 +32,8 @@ def cargar_resultados_excel():
             key = f"{fecha_str}_{turno}"
 
             resultados[key] = {
-                'numero': str(row['Numero']).zfill(4),
-                'signo': row['Signo']
+                'numero': str(row['Numero_Completo']).zfill(4),
+                'signo': row['Signo_Nombre']
             }
 
         return resultados
