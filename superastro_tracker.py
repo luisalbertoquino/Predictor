@@ -103,34 +103,43 @@ class SuperAstroTracker:
     
     def calcular_aciertos(self, prediccion):
         """
-        Calcula cuántos dígitos acertó cada modelo
+        Calcula cuántos dígitos acertó cada modelo.
+        Maneja dos formatos:
+          - Formato antiguo (ML Basic): rf_combinado, xgb_combinado... en el nivel raíz.
+          - Formato nuevo (Maestro/Avanzada): campo 'metodos' con sub-claves RF, XGB, Estadistico, Metodo1...
         """
         if not prediccion.get("resultado_real"):
             return None
-        
-        numero_real = prediccion["resultado_real"]["numero"]
-        signo_real = prediccion["resultado_real"]["signo"]
-        
+
+        numero_real = str(prediccion["resultado_real"]["numero"]).zfill(4)
+        signo_real  = str(prediccion["resultado_real"]["signo"])
+
         aciertos = {}
-        
+
+        def _evaluar(nombre, pred_data):
+            if not pred_data or "numero" not in pred_data:
+                return
+            numero_pred = str(pred_data.get("numero", "")).zfill(4)
+            signo_pred  = str(pred_data.get("signo", ""))
+            digitos_correctos = sum(
+                1 for r, p in zip(numero_real, numero_pred) if r == p
+            )
+            aciertos[nombre] = {
+                "digitos_correctos": digitos_correctos,
+                "signo_correcto":    signo_real.lower() == signo_pred.lower(),
+                "numero_predicho":   numero_pred,
+                "numero_real":       numero_real,
+            }
+
+        # Formato antiguo: claves en el nivel raíz
         for modelo in ["rf_combinado", "xgb_combinado", "rf_especifico", "xgb_especifico"]:
-            if modelo in prediccion and prediccion[modelo]:
-                numero_pred = prediccion[modelo].get("numero", "")
-                signo_pred = prediccion[modelo].get("signo", "")
-                
-                # Contar dígitos correctos en posición correcta
-                digitos_correctos = sum(1 for i, (r, p) in enumerate(zip(numero_real, numero_pred)) if r == p)
-                
-                # Verificar signo
-                signo_correcto = signo_real.lower() == signo_pred.lower()
-                
-                aciertos[modelo] = {
-                    "digitos_correctos": digitos_correctos,
-                    "signo_correcto": signo_correcto,
-                    "numero_predicho": numero_pred,
-                    "numero_real": numero_real
-                }
-        
+            if modelo in prediccion:
+                _evaluar(modelo, prediccion[modelo])
+
+        # Formato nuevo: claves dentro de 'metodos'
+        for nombre, pred_data in prediccion.get("metodos", {}).items():
+            _evaluar(nombre, pred_data)
+
         return aciertos
     
     def generar_reporte(self, ultimos_dias=5):

@@ -678,16 +678,20 @@
             fetch('/api/historial')
                 .then(response => response.json())
                 .then(data => {
+                    if (data.error) {
+                        console.error('Error API /historial:', data.error);
+                        return;
+                    }
                     const nuevoHistorial = JSON.stringify(data);
                     // Solo actualizar si hay cambios
                     if (nuevoHistorial !== ultimoHistorial) {
                         ultimoHistorial = nuevoHistorial;
-                        mostrarEstadisticas(data.estadisticas, data.evaluadas);
-                        mostrarTop3(data.evaluadas);
-                        mostrarPendientes(data.pendientes);
-                        mostrarEvaluadas(data.evaluadas);
-                        mostrarRanking(data.evaluadas);
-                        mostrarAnalisisAlgoritmos(data.evaluadas);
+                        mostrarEstadisticas(data.estadisticas || {}, data.evaluadas || []);
+                        mostrarTop3(data.evaluadas || []);
+                        mostrarPendientes(data.pendientes || []);
+                        mostrarEvaluadas(data.evaluadas || []);
+                        mostrarRanking(data.evaluadas || []);
+                        mostrarAnalisisAlgoritmos(data.evaluadas || []);
                     }
                 })
                 .catch(error => console.error('Error:', error));
