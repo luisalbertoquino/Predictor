@@ -23,6 +23,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Contraseñas (nunca subir al repositorio)
+.db_password
+
 # Archivos de datos (no subir datos históricos)
 *.xlsx
 predicciones_historial.json

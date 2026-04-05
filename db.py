@@ -23,18 +23,24 @@ DB_CONFIG = {
 }
 
 DB_PASSWORD_FILE = '/root/.db_password'
+# Copia local accesible por www-data/gunicorn
+DB_PASSWORD_FILE_LOCAL = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.db_password')
 
 
 def _leer_password():
     """Lee la contraseña de MySQL desde el archivo de configuración del servidor."""
-    # En producción (VPS): leer del archivo
-    if os.path.exists(DB_PASSWORD_FILE):
-        with open(DB_PASSWORD_FILE, 'r') as f:
-            for line in f:
-                match = re.search(r'root_mysql_pass=["\']?([^"\'\\n]+)["\']?', line.strip())
-                if match:
-                    return match.group(1)
-    # En desarrollo local: usar variable de entorno
+    # Buscar en múltiples ubicaciones (root primero, luego directorio del proyecto)
+    for path in [DB_PASSWORD_FILE, DB_PASSWORD_FILE_LOCAL]:
+        try:
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    for line in f:
+                        match = re.search(r'root_mysql_pass=["\']?([^"\'\\n]+)["\']?', line.strip())
+                        if match:
+                            return match.group(1)
+        except PermissionError:
+            continue
+    # Fallback: variable de entorno
     return os.environ.get('MYSQL_ROOT_PASSWORD', '')
 
 
