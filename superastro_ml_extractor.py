@@ -347,82 +347,55 @@ class SuperAstroMLExtractor:
 
 def extraer_actualizar(fecha_inicio="2020-01-01", silencioso=False, archivo_existente=None):
     """
-    Función para extraer y actualizar datos
-    Si existe un archivo previo, solo descarga lo que falta
-    
+    Función para extraer y actualizar datos.
+    Consulta la BD para saber desde qué fecha continuar (incremental).
+
     Args:
-        fecha_inicio: Fecha inicial para descarga completa
+        fecha_inicio: Fecha de inicio solo si la BD está vacía
         silencioso: Modo silencioso
-        archivo_existente: Ruta del archivo existente para actualizar
-    
+        archivo_existente: Ignorado (legacy, datos en MySQL)
+
     Returns:
-        str: Ruta del archivo generado
+        str: 'mysql:superastro_db' si ok, None si error
     """
     if not silencioso:
         print("\n" + "="*70)
         print("🌟 SUPERASTRO ML DATA EXTRACTOR 🌟")
         print("Extracción y preparación de datos para Machine Learning")
         print("="*70 + "\n")
-    
-    # Crear instancia del extractor
-    extractor = SuperAstroMLExtractor()
-    
-    # Configurar fechas
-    FECHA_FIN = datetime.now().strftime("%Y-%m-%d")
-    datos_previos = []
-    
-    # Si hay archivo existente, cargar datos previos
-    if archivo_existente and os.path.exists(archivo_existente):
-        try:
-            if not silencioso:
-                print(f"📂 Cargando datos existentes: {archivo_existente}")
-            
-            df_previo = pd.read_excel(archivo_existente, sheet_name='Datos_Raw')
-            
-            # Convertir a lista de diccionarios
-            datos_previos = df_previo.to_dict('records')
 
-            # Encontrar última fecha
-            ultima_fecha_str = str(df_previo['Fecha'].max())
-            # Asegurar formato correcto (puede venir como datetime)
-            if ' ' in ultima_fecha_str:
-                ultima_fecha_str = ultima_fecha_str.split(' ')[0]
-            ultima_fecha = datetime.strptime(ultima_fecha_str, "%Y-%m-%d")
-            
-            # Calcular días faltantes
-            fecha_inicio_nueva = (ultima_fecha + timedelta(days=1)).strftime("%Y-%m-%d")
-            
-            dias_faltantes = (datetime.now() - ultima_fecha).days
-            
+    extractor = SuperAstroMLExtractor()
+    FECHA_FIN = datetime.now().strftime("%Y-%m-%d")
+
+    # Determinar desde qué fecha descargar consultando la BD
+    try:
+        from db import ultima_fecha as _ultima_fecha, total_registros
+        uf = _ultima_fecha()
+        if uf:
+            ultima_dt = datetime.strptime(str(uf)[:10], "%Y-%m-%d")
+            dias_faltantes = (datetime.now() - ultima_dt).days
             if dias_faltantes <= 0:
                 if not silencioso:
-                    print(f"✅ Los datos ya están actualizados hasta hoy")
-                    print(f"   Total de registros: {len(datos_previos)}")
-                return archivo_existente
-            
+                    print(f"✅ BD ya actualizada hasta {uf} ({total_registros()} registros)")
+                return "mysql:superastro_db"
+            fecha_inicio = (ultima_dt + timedelta(days=1)).strftime("%Y-%m-%d")
             if not silencioso:
-                print(f"✅ Datos existentes: {len(datos_previos)} registros")
-                print(f"📅 Última fecha en datos: {ultima_fecha_str}")
-                print(f"🔄 Descargando {dias_faltantes} días faltantes ({fecha_inicio_nueva} a {FECHA_FIN})")
-            
-            fecha_inicio = fecha_inicio_nueva
-            
-        except Exception as e:
+                print(f"📂 BD existente: {total_registros()} registros hasta {uf}")
+                print(f"🔄 Descargando {dias_faltantes} días faltantes ({fecha_inicio} a {FECHA_FIN})\n")
+        else:
             if not silencioso:
-                print(f"⚠️  Error al cargar datos previos: {e}")
-                print(f"   Realizando descarga completa desde {fecha_inicio}")
-            datos_previos = []
-    else:
+                print(f"⚙️  BD vacía — descarga completa desde {fecha_inicio}")
+                print(f"   📅 Fecha fin: {FECHA_FIN}")
+                print(f"   🎯 Extrayendo ambos turnos: SOL y LUNA\n")
+    except Exception as e:
         if not silencioso:
-            print(f"⚙️  Configuración:")
-            print(f"   📅 Fecha inicio: {fecha_inicio}")
-            print(f"   📅 Fecha fin: {FECHA_FIN}")
-            print(f"   🎯 Extrayendo ambos turnos: SOL (Día) y LUNA (Noche)\n")
+            print(f"⚠️  No se pudo consultar la BD: {e}")
+            print(f"   Usando fecha_inicio={fecha_inicio}")
     
     # Extraer datos nuevos o faltantes
-    if not silencioso and datos_previos:
+    if not silencioso:
         print(f"\n{'='*70}")
-        print("📥 DESCARGANDO SOLO DÍAS FALTANTES")
+        print("📥 DESCARGANDO DÍAS FALTANTES")
         print(f"{'='*70}\n")
 
     datos_sol  = extractor.extraer_rango_fechas("SOL",  fecha_inicio, FECHA_FIN)
