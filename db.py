@@ -217,9 +217,17 @@ def cargar_datos_raw():
         FROM sorteo_resultados
         ORDER BY fecha ASC, turno ASC
     """
+    _COLS = ['Fecha','Turno','Tipo_Astro','Numero_Completo',
+             'Posicion_1','Posicion_2','Posicion_3','Posicion_4',
+             'Signo_Nombre','Signo_Codigo','Sorteo']
     conn = get_connection()
     try:
-        df = pd.read_sql(sql, conn)
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()  # lista de dicts (DictCursor)
+        if not rows:
+            return pd.DataFrame(columns=_COLS)
+        df = pd.DataFrame(rows)
         df['Fecha'] = pd.to_datetime(df['Fecha'])
         return df
     finally:
