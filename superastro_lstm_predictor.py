@@ -25,7 +25,6 @@ warnings.filterwarnings('ignore')
 # Importar utilidades compartidas
 from utils_compartido import (
     agregar_prediccion,
-    ARCHIVO_EXCEL,
     ARCHIVO_JSON,
     calcular_proximo_sorteo_sol,
     calcular_proximo_sorteo_luna

@@ -23,8 +23,7 @@ import numpy as np
 from pathlib import Path
 import os
 
-# Importar utilidades compartidas
-from utils_compartido import ARCHIVO_EXCEL
+# (ARCHIVO_EXCEL eliminado - los datos se guardan en MySQL)
 
 class SuperAstroMLExtractor:
     """
@@ -277,8 +276,8 @@ class SuperAstroMLExtractor:
         """
         Exporta a Excel con múltiples hojas optimizadas - usa archivo compartido
         """
-        # Usar nombre de archivo compartido (sin timestamp)
-        nombre_archivo = ARCHIVO_EXCEL
+        # Método legacy - ya no se usa (datos en MySQL)
+        nombre_archivo = 'superastro_ml_data.xlsx'
         
         with pd.ExcelWriter(nombre_archivo, engine='openpyxl') as writer:
             

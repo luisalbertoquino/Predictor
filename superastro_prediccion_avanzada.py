@@ -24,7 +24,6 @@ import json
 # Importar utilidades compartidas
 from utils_compartido import (
     agregar_prediccion,
-    ARCHIVO_EXCEL,
     ARCHIVO_JSON,
     calcular_proximo_sorteo_sol,
     calcular_proximo_sorteo_luna
@@ -36,10 +35,8 @@ class SuperAstroPrediccionAvanzada:
     Métodos avanzados de predicción basados en análisis de patrones
     """
 
-    def __init__(self, archivo_datos):
-        """
-        Inicializa con datos históricos
-        """
+    def __init__(self, archivo_datos=None):
+        """Inicializa cargando datos históricos desde la BD."""
         from db import cargar_datos_raw
         self.df = cargar_datos_raw()
         print(f"\n✅ Datos cargados: {len(self.df)} registros")
@@ -417,19 +414,11 @@ def main():
     """
     import os
 
-    # Usar archivo compartido
-    if not os.path.exists(ARCHIVO_EXCEL):
-        print("❌ No se encontró archivo de datos")
-        print("💡 Ejecuta primero superastro_ml_predictor.py para descargar datos")
-        return
-
-    archivo = ARCHIVO_EXCEL
-
     print("\n" + "="*70)
     print("🎯 SUPERASTRO - MÉTODOS AVANZADOS DE PREDICCIÓN")
     print("="*70)
 
-    predictor = SuperAstroPrediccionAvanzada(archivo)
+    predictor = SuperAstroPrediccionAvanzada(None)
 
     # Predecir para SOL
     predictor.predecir_todo(turno=0)

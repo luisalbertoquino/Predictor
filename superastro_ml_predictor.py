@@ -32,7 +32,6 @@ from utils_compartido import (
     agregar_prediccion,
     cargar_historial,
     ARCHIVO_JSON,
-    ARCHIVO_EXCEL,
     calcular_proximo_sorteo_sol,
     calcular_proximo_sorteo_luna
 )
